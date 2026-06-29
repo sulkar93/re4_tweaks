@@ -2133,7 +2133,16 @@ void Trainer_RenderUI(int columnCount)
 			{
 				ImGui_ColumnSwitch();
 
-				ImGui::Checkbox("Enable Dynamic Difficulty Level Override", &re4t::cfg->bTrainerOverrideDynamicDifficulty);
+				if (ImGui::Checkbox("Enable Dynamic Difficulty Level Override", &re4t::cfg->bTrainerOverrideDynamicDifficulty))
+				{
+					// Force level to max (10) the moment this is checked, no manual adjustment needed
+					re4t::cfg->iTrainerDynamicDifficultyLevel = 10;
+					if (re4t::cfg->bTrainerOverrideDynamicDifficulty)
+					{
+						GlobalPtr()->dynamicDifficultyPoints_4F94 = 10 * 1000 + 500;
+						GlobalPtr()->dynamicDifficultyLevel_4F98 = 10;
+					}
+				}
 
 				ImGui_ItemSeparator();
 
@@ -2141,17 +2150,18 @@ void Trainer_RenderUI(int columnCount)
 
 				ImGui::TextWrapped("Allows overriding the game's \"dynamic\" difficulty level.");
 				ImGui::TextWrapped("(Affects enemy health, damage, speed, and aggression)");
+				ImGui::TextWrapped("Locked at Level 10 (maximum) while enabled.");
 
 				ImGui::Spacing();
-				re4t::cfg->iTrainerDynamicDifficultyLevel = GlobalPtr()->dynamicDifficultyLevel_4F98;
-				ImGui::BeginDisabled(!re4t::cfg->bTrainerOverrideDynamicDifficulty);
-				ImGui::SliderInt("", &re4t::cfg->iTrainerDynamicDifficultyLevel, 1, 10);
-				ImGui::EndDisabled();
+				ImGui::Text("Current Level: %d", GlobalPtr()->dynamicDifficultyLevel_4F98);
 
-				if (ImGui::IsItemEdited())
+				// Continuously enforce level 10 every frame while the override is enabled,
+				// so the game can never lower it back down.
+				if (re4t::cfg->bTrainerOverrideDynamicDifficulty)
 				{
-					GlobalPtr()->dynamicDifficultyPoints_4F94 = re4t::cfg->iTrainerDynamicDifficultyLevel * 1000 + 500;
-					GlobalPtr()->dynamicDifficultyLevel_4F98 = re4t::cfg->iTrainerDynamicDifficultyLevel;
+					re4t::cfg->iTrainerDynamicDifficultyLevel = 10;
+					GlobalPtr()->dynamicDifficultyPoints_4F94 = 10 * 1000 + 500;
+					GlobalPtr()->dynamicDifficultyLevel_4F98 = 10;
 				}
 			}
 
